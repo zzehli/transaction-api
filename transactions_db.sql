@@ -1,10 +1,10 @@
-drop user transactiontracker;
 drop database transactiontrackerdb;
+drop user transactiontracker;
 create user transactiontracker with password 'password';
 create database transactiontrackerdb with template=template0 owner=transactiontracker;
 \connect transactiontrackerdb;
-alter default priviledges grant all on tables to transactiontracker;
-alter default priviledges grant all on sequences to transactiontracker;
+alter default privileges grant all on tables to transactiontracker;
+alter default privileges grant all on sequences to transactiontracker;
 
 create table users(
     user_id integer primary key not null,
