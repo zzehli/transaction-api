@@ -2,14 +2,13 @@ package com.api.transactionapi.repositories;
 
 import com.api.transactionapi.domain.User;
 import com.api.transactionapi.exceptions.EtAuthException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
@@ -30,13 +29,14 @@ public class UserRepositoryImpl implements UserRepository{
     @Override
     public Integer create(String firstName, String lastName, String email, String password) throws EtAuthException {
         try {
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(10));
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps = connection.prepareStatement(SQL_CREATE, Statement.RETURN_GENERATED_KEYS);
                 ps.setString(1, firstName);
                 ps.setString(2, lastName);
                 ps.setString(3, email);
-                ps.setString(4, password);
+                ps.setString(4, hashedPassword);
                 return ps;
             }, keyHolder);
             return (Integer) keyHolder.getKeys().get("USER_ID");
@@ -49,7 +49,7 @@ public class UserRepositoryImpl implements UserRepository{
     public User findByEmailAndPassword(String email, String password) throws EtAuthException {
         try {
             User user = jdbcTemplate.queryForObject(SQL_FIND_BY_EMAIL, new Object[]{email}, userRowMapper);
-            if(!password.equals(user.getPassword()))
+            if(!BCrypt.checkpw(password, user.getPassword()))
                 throw new EtAuthException("Password doesn't match");
             return user;
         }catch (EmptyResultDataAccessException e) {
