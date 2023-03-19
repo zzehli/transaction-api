@@ -11,3 +11,5 @@ psql -U postgres --file transactions_db.sql
 ```
 
 ## start server
+with intellij
+
