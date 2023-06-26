@@ -16,13 +16,18 @@ import java.util.List;
 
 @Repository
 public class CategoryRepositoryImpl implements CategoryRepository {
+    private static final String SQL_FIND_ALL = "SELECT C.CATEGORY_ID, C.USER_ID, C.TITLE, C.DESCRIPTION, " +
+            "COALESCE(SUM(T.AMOUNT), 0) TOTAL_EXPENSE " +
+            "FROM TRANSACTIONS T RIGHT OUTER JOIN CATEGORIES C ON C.CATEGORY_ID = T.CATEGORY_ID " +
+            "WHERE C.USER_ID = ? GROUP BY C.CATEGORY_ID";
     private static final String SQL_FIND_BY_ID = "SELECT C.CATEGORY_ID, C.USER_ID, C.TITLE, C.DESCRIPTION, " +
             "COALESCE(SUM(T.AMOUNT), 0) TOTAL_EXPENSE " +
             "FROM TRANSACTIONS T RIGHT OUTER JOIN CATEGORIES C ON C.CATEGORY_ID = T.CATEGORY_ID " +
             "WHERE C.USER_ID = ? AND C.CATEGORY_ID = ? GROUP BY C.CATEGORY_ID";
     private static final String SQL_CREATE = "INSERT INTO CATEGORIES (CATEGORY_ID, USER_ID, TITLE, DESCRIPTION) " +
             "VALUES(NEXTVAL('CATEGORIES_SEQ'), ?, ?, ?)";
-
+    private static final String SQL_UPDATE = "UPDATE CATEGORIES SET TITLE = ?, DESCRIPTION = ? " +
+            "WHERE USER_ID = ? AND CATEGORY_ID = ?";
     final
     JdbcTemplate jdbcTemplate;
 
@@ -32,7 +37,11 @@ public class CategoryRepositoryImpl implements CategoryRepository {
 
     @Override
     public List<Category> findAll(Integer userId) throws EtResourceNotFoundException {
-        return null;
+        try {
+            return jdbcTemplate.query(SQL_FIND_ALL, new Object[]{userId}, categoryRowMapper);
+        } catch (Exception e) {
+            throw new EtResourceNotFoundException("Category list not found");
+        }
     }
 
     @Override
@@ -63,7 +72,12 @@ public class CategoryRepositoryImpl implements CategoryRepository {
 
     @Override
     public void update(Integer userId, Integer categoryId, Category category) throws EtBadRequestException {
+        try {
+            jdbcTemplate.update(SQL_UPDATE, new Object[]{category.getTitle(), category.getDescription(), userId, categoryId});
 
+        } catch (Exception e) {
+            throw new EtBadRequestException("Invalid update request");
+        }
     }
 
     @Override
