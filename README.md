@@ -1,4 +1,5 @@
-# Dev Environment
+# Transaction API (WIP)
+## Dev Environment
 To start the API, set up the DB and start the server
 ## Set up DB: create sql database
 start docker container. SSH into the container named `postgresdb`
