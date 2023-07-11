@@ -28,6 +28,11 @@ public class CategoryRepositoryImpl implements CategoryRepository {
             "VALUES(NEXTVAL('CATEGORIES_SEQ'), ?, ?, ?)";
     private static final String SQL_UPDATE = "UPDATE CATEGORIES SET TITLE = ?, DESCRIPTION = ? " +
             "WHERE USER_ID = ? AND CATEGORY_ID = ?";
+
+    private static final String SQL_DELETE = "DELETE FROM CATEGORIES WHERE USER_ID = ? AND CATEGORY_ID = ?";
+
+    private static final String SQL_DELETE_ALL_TRANSACTIONS = "DELETE FROM TRANSACTIONS WHERE CATEGORY_ID = ?";
+
     final
     JdbcTemplate jdbcTemplate;
 
@@ -82,7 +87,12 @@ public class CategoryRepositoryImpl implements CategoryRepository {
 
     @Override
     public void removeById(Integer userId, Integer categoryId) {
+        this.removeAllCategoryTransactions(categoryId);
+        jdbcTemplate.update(SQL_DELETE, new Object[]{userId, categoryId});
+    }
 
+    private void removeAllCategoryTransactions(Integer categoryId) {
+        jdbcTemplate.update(SQL_DELETE_ALL_TRANSACTIONS, new Object[]{categoryId});
     }
 
     private RowMapper<Category> categoryRowMapper = ((rs, rowNum) -> {
